@@ -1,1 +1,49 @@
+title: OWASP A01 - Broken Access Control (Path Traversal)
+id: a1b2c3d4-0001-4000-8000-000000000001
+status: stable
+description: >
+  Detects path traversal attempts and unauthorized access to restricted
+  resources from web server logs. Covers directory traversal, dotdot-slash
+  and encoded variants commonly used to bypass access controls.
+author: Security Team
+date: 2024/01/01
+modified: 2024/01/01
 
+logsource:
+  category: webserver
+
+detection:
+  selection_traversal:
+    c-uri|contains:
+      - '../'
+      - '..%2f'
+      - '..%2F'
+      - '%2e%2e%2f'
+      - '..%5c'
+      - '%2e%2e/'
+  selection_forbidden:
+    sc-status:
+      - '403'
+      - '401'
+  filter_normal:
+    c-uri|contains:
+      - '/api/public'
+      - '/health'
+  condition: selection_traversal or (selection_forbidden and not filter_normal)
+
+falsepositives:
+  - Legitimate API calls returning 401 due to expired tokens
+  - Misconfigured clients
+
+level: high
+
+tags:
+  - attack.initial_access
+  - attack.t1190
+  - owasp.a01_2021
+
+fields:
+  - c-ip
+  - c-uri
+  - sc-status
+  - cs-user-agent
