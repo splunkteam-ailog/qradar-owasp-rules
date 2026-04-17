@@ -1,0 +1,49 @@
+title: OWASP A02 - Cryptographic Failures (Sensitive Data Over HTTP)
+id: a1b2c3d4-0002-4000-8000-000000000002
+status: stable
+description: >
+  Detects access to sensitive endpoints over unencrypted HTTP, weak SSL/TLS
+  negotiation failures, and exposure of sensitive data paths in server logs.
+  Identifies attempts to reach login/admin pages over non-HTTPS connections.
+author: Security Team
+date: 2024/01/01
+modified: 2024/01/01
+
+logsource:
+  category: webserver
+
+detection:
+  selection_sensitive_path:
+    c-uri|contains:
+      - '/login'
+      - '/admin'
+      - '/password'
+      - '/credentials'
+      - '/api/token'
+      - '/api/auth'
+      - '/user/profile'
+      - '/checkout'
+      - '/payment'
+  selection_http:
+    cs-version: 'HTTP/1.1'
+    cs-uri-scheme: 'http'
+  selection_ssl_error:
+    sc-status: '525'
+  condition: (selection_sensitive_path and selection_http) or selection_ssl_error
+
+falsepositives:
+  - Internal services without SSL termination behind load balancer
+  - Redirect loops before SSL enforcement
+
+level: medium
+
+tags:
+  - attack.credential_access
+  - attack.t1552
+  - owasp.a02_2021
+
+fields:
+  - c-ip
+  - c-uri
+  - sc-status
+  - cs-version
