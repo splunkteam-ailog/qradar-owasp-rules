@@ -1,0 +1,64 @@
+title: OWASP A07 - Identification and Authentication Failures (Brute Force)
+id: a1b2c3d4-0007-4000-8000-000000000007
+status: stable
+description: >
+  Detects brute force and credential stuffing attacks by identifying
+  multiple authentication failures from a single source IP within a
+  short time window. Covers login page abuse, API authentication
+  endpoints, and automated attack tool signatures.
+author: Security Team
+date: 2024/01/01
+modified: 2024/01/01
+
+logsource:
+  category: webserver
+
+detection:
+  selection_auth_endpoints:
+    c-uri|contains:
+      - '/login'
+      - '/signin'
+      - '/auth'
+      - '/api/login'
+      - '/api/token'
+      - '/oauth/token'
+      - '/wp-login.php'
+      - '/xmlrpc.php'
+  selection_auth_failure:
+    sc-status:
+      - '401'
+      - '403'
+  selection_attack_tools:
+    cs-user-agent|contains:
+      - 'hydra'
+      - 'medusa'
+      - 'ncrack'
+      - 'masscan'
+      - 'python-requests'
+      - 'Go-http-client'
+      - 'curl/7'
+  timeframe: 1m
+  condition: >
+    (selection_auth_endpoints and selection_auth_failure) | count() by c-ip > 10
+    or selection_attack_tools
+
+falsepositives:
+  - Legitimate users forgetting their password
+  - OAuth token refresh loops
+  - Load balancer health checks
+
+level: critical
+
+tags:
+  - attack.credential_access
+  - attack.t1110
+  - attack.t1110.001
+  - attack.t1110.003
+  - owasp.a07_2021
+
+fields:
+  - c-ip
+  - c-uri
+  - sc-status
+  - cs-user-agent
+  - cs-username
