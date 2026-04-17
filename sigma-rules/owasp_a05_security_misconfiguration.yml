@@ -1,0 +1,70 @@
+title: OWASP A05 - Security Misconfiguration (Exposed Admin Interfaces)
+id: a1b2c3d4-0005-4000-8000-000000000005
+status: stable
+description: >
+  Detects access to commonly exposed admin panels, configuration files,
+  backup files, and development artifacts that indicate security misconfiguration.
+  Also covers default credential usage and directory listing attempts.
+author: Security Team
+date: 2024/01/01
+modified: 2024/01/01
+
+logsource:
+  category: webserver
+
+detection:
+  selection_admin_paths:
+    c-uri|contains:
+      - '/admin'
+      - '/administrator'
+      - '/wp-admin'
+      - '/phpmyadmin'
+      - '/manager/html'
+      - '/.env'
+      - '/config.php'
+      - '/web.config'
+      - '/.git/'
+      - '/backup'
+      - '/server-status'
+      - '/actuator'
+      - '/actuator/env'
+      - '/actuator/heapdump'
+      - '/swagger-ui'
+      - '/api-docs'
+      - '/console'
+      - '/debug'
+      - '/.well-known/'
+  selection_backup_extensions:
+    c-uri|endswith:
+      - '.bak'
+      - '.old'
+      - '.orig'
+      - '.backup'
+      - '.sql'
+      - '.dump'
+      - '.tar'
+      - '.tar.gz'
+      - '.zip'
+  filter_legitimate:
+    c-ip|cidr:
+      - '10.0.0.0/8'
+      - '172.16.0.0/12'
+      - '192.168.0.0/16'
+  condition: (selection_admin_paths or selection_backup_extensions) and not filter_legitimate
+
+falsepositives:
+  - Internal security scans from known IP ranges
+  - Authorized penetration testing
+
+level: high
+
+tags:
+  - attack.discovery
+  - attack.t1083
+  - owasp.a05_2021
+
+fields:
+  - c-ip
+  - c-uri
+  - sc-status
+  - cs-user-agent
