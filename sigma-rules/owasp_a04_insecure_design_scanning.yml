@@ -1,0 +1,63 @@
+title: OWASP A04 - Insecure Design (Automated Directory & Vulnerability Scanning)
+id: a1b2c3d4-0004-4000-8000-000000000009
+status: stable
+description: >
+  Detects automated reconnaissance and vulnerability scanning activities
+  against the web server. High request rates, sequential 404 errors, and
+  known scanner user-agent strings indicate active discovery of application
+  structure — often a precursor to exploitation.
+author: Security Team
+date: 2024/01/01
+modified: 2024/01/01
+ 
+logsource:
+  category: webserver
+ 
+detection:
+  selection_scanner_agents:
+    cs-user-agent|contains:
+      - 'nikto'
+      - 'Nikto'
+      - 'sqlmap'
+      - 'Nmap'
+      - 'nmap'
+      - 'dirbuster'
+      - 'DirBuster'
+      - 'gobuster'
+      - 'wfuzz'
+      - 'ffuf'
+      - 'FFUF'
+      - 'ZAP'
+      - 'Burp'
+      - 'burpsuite'
+      - 'nuclei'
+      - 'Nuclei'
+      - 'acunetix'
+      - 'Acunetix'
+      - 'nessus'
+      - 'Nessus'
+      - 'masscan'
+      - 'WPScan'
+  selection_404_flood:
+    sc-status: '404'
+    timeframe: 30s
+  condition: selection_scanner_agents or (selection_404_flood | count() by c-ip > 20)
+ 
+falsepositives:
+  - Authorized penetration tests
+  - Broken links crawled by search engines
+ 
+level: high
+ 
+tags:
+  - attack.discovery
+  - attack.t1595
+  - attack.t1595.003
+  - owasp.a04_2021
+ 
+fields:
+  - c-ip
+  - c-uri
+  - sc-status
+  - cs-user-agent
+ 
