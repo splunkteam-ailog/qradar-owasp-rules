@@ -1,0 +1,54 @@
+title: OWASP A09 - Security Logging & Monitoring Failures (Log Injection)
+id: a1b2c3d4-0009-4000-8000-000000000011
+status: stable
+description: >
+  Detects log injection attempts where attackers try to forge or poison
+  server log entries to cover their tracks or confuse SIEM parsing.
+  Also detects suspicious activity patterns that suggest attempts to
+  blind the monitoring system (log flooding, CRLF injection).
+author: Security Team
+date: 2024/01/01
+modified: 2024/01/01
+
+logsource:
+  category: webserver
+
+detection:
+  selection_crlf_injection:
+    c-uri|contains:
+      - '%0d%0a'
+      - '%0D%0A'
+      - '\r\n'
+      - '%0a'
+      - '%0d'
+      - '\n'
+      - 'HTTP/1.1%20200'
+      - 'HTTP%2F1'
+  selection_log_forging:
+    c-uri|contains:
+      - '127.0.0.1 - - ['
+      - 'GET / HTTP'
+      - 'POST / HTTP'
+  selection_request_flood:
+    timeframe: 10s
+  condition: >
+    selection_crlf_injection or selection_log_forging
+    or (selection_request_flood | count() by c-ip > 500)
+
+falsepositives:
+  - URL parameters that legitimately contain newline-encoded values
+  - Load testing tools (JMeter, Locust) from known IPs
+
+level: high
+
+tags:
+  - attack.defense_evasion
+  - attack.t1562
+  - attack.t1565
+  - owasp.a09_2021
+
+fields:
+  - c-ip
+  - c-uri
+  - sc-status
+  - cs-user-agent
