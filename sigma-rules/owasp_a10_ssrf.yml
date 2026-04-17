@@ -1,0 +1,62 @@
+title: OWASP A10 - Server-Side Request Forgery (SSRF)
+id: a1b2c3d4-0010-4000-8000-000000000010
+status: stable
+description: >
+  Detects Server-Side Request Forgery (SSRF) attempts targeting internal
+  network resources, cloud metadata endpoints, and loopback addresses via
+  manipulated URL parameters in web server requests.
+author: Security Team
+date: 2024/01/01
+modified: 2024/01/01
+
+logsource:
+  category: webserver
+
+detection:
+  selection_metadata_endpoints:
+    c-uri|contains:
+      - '169.254.169.254'
+      - 'metadata.google.internal'
+      - 'fd00:ec2::254'
+      - '100.100.100.200'
+  selection_internal_ip_params:
+    c-uri|contains:
+      - 'url=http://127'
+      - 'url=http://localhost'
+      - 'url=http://10.'
+      - 'url=http://172.16'
+      - 'url=http://192.168'
+      - 'url=http://0.0.0.0'
+      - 'redirect=http://127'
+      - 'next=http://127'
+      - 'callback=http://127'
+      - 'fetch=http://127'
+      - 'dest=http://127'
+      - 'uri=http://127'
+  selection_encoded_loopback:
+    c-uri|contains:
+      - '0x7f000001'
+      - '2130706433'
+      - '0177.0.0.1'
+      - 'localhost'
+  condition: >
+    selection_metadata_endpoints or selection_internal_ip_params
+    or selection_encoded_loopback
+
+falsepositives:
+  - Internal proxy services that legitimately forward to internal IPs
+  - Webhook testing tools
+
+level: critical
+
+tags:
+  - attack.initial_access
+  - attack.t1190
+  - attack.t1599
+  - owasp.a10_2021
+
+fields:
+  - c-ip
+  - c-uri
+  - sc-status
+  - cs-user-agent
