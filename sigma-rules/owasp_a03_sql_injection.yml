@@ -1,0 +1,60 @@
+title: OWASP A03 - Injection (SQL Injection Attempt)
+id: a1b2c3d4-0003-4000-8000-000000000003
+status: stable
+description: >
+  Detects SQL injection attempts in HTTP request URIs and query strings
+  from web server logs. Covers UNION-based, error-based, boolean-based,
+  and time-based blind SQLi payloads including common encoded variants.
+author: Security Team
+date: 2024/01/01
+modified: 2024/01/01
+
+logsource:
+  category: webserver
+
+detection:
+  selection_sqli_keywords:
+    c-uri|contains:
+      - "' OR '"
+      - "' AND '"
+      - "1=1"
+      - "1 OR 1"
+      - "UNION SELECT"
+      - "UNION+SELECT"
+      - "union%20select"
+      - "UNION ALL SELECT"
+      - "--+"
+      - "'; DROP"
+      - "SELECT * FROM"
+      - "SLEEP("
+      - "BENCHMARK("
+      - "WAITFOR DELAY"
+      - "xp_cmdshell"
+      - "information_schema"
+      - "pg_sleep"
+  selection_sqli_encoded:
+    c-uri|contains:
+      - "%27%20OR%20"
+      - "%27%20AND%20"
+      - "%55NION"
+      - "0x"
+  condition: selection_sqli_keywords or selection_sqli_encoded
+
+falsepositives:
+  - Security scanners (Burp Suite, OWASP ZAP) in test environments
+  - Legitimate search queries with SQL-like syntax
+
+level: high
+
+tags:
+  - attack.initial_access
+  - attack.t1190
+  - attack.t1059.004
+  - owasp.a03_2021
+
+fields:
+  - c-ip
+  - c-uri
+  - sc-status
+  - cs-user-agent
+  - cs-referer
