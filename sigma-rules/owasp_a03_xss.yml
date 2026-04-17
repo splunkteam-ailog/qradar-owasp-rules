@@ -1,0 +1,56 @@
+title: OWASP A03 - Injection (Cross-Site Scripting Attempt)
+id: a1b2c3d4-0003-4000-8000-000000000004
+status: stable
+description: >
+  Detects Cross-Site Scripting (XSS) injection attempts in HTTP requests.
+  Covers reflected XSS via URI parameters, stored XSS payloads, and
+  DOM-based XSS patterns including HTML entity-encoded variants.
+author: Security Team
+date: 2024/01/01
+modified: 2024/01/01
+
+logsource:
+  category: webserver
+
+detection:
+  selection_xss_tags:
+    c-uri|contains:
+      - '<script'
+      - '</script>'
+      - 'javascript:'
+      - 'onerror='
+      - 'onload='
+      - 'onclick='
+      - 'onmouseover='
+      - '<img src='
+      - '<svg/'
+      - 'alert('
+      - 'document.cookie'
+      - 'document.write('
+      - 'eval('
+      - 'String.fromCharCode'
+  selection_xss_encoded:
+    c-uri|contains:
+      - '%3Cscript'
+      - '%3C%2Fscript'
+      - 'javascript%3A'
+      - '%3Csvg'
+      - '%22%3E%3Cscript'
+  condition: selection_xss_tags or selection_xss_encoded
+
+falsepositives:
+  - Security scanners in test environments
+  - False positives from code snippet sharing platforms
+
+level: high
+
+tags:
+  - attack.initial_access
+  - attack.t1189
+  - owasp.a03_2021_xss
+
+fields:
+  - c-ip
+  - c-uri
+  - sc-status
+  - cs-user-agent
