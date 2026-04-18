@@ -1,7 +1,7 @@
 title: OWASP A06/A08 - Vulnerable Components Exploitation Attempt
 id: a1b2c3d4-0008-4000-8000-000000000008
 status: stable
-description: Detects exploitation attempts targeting known vulnerabilities in common web frameworks, libraries, and components. Covers Log4Shell, Spring4Shell, Apache Struts, Shellshock, and other frequently abused CVEs visible in server access logs via payload patterns.
+description: Detects exploitation attempts targeting known vulnerabilities in common web frameworks and components including Log4Shell, Spring4Shell and PHP RCE payloads.
 author: Security Team
 date: 2024/01/01
 modified: 2024/01/01
@@ -15,19 +15,12 @@ detection:
       - 'jndi:ldap'
       - 'jndi:rmi'
       - 'jndi:dns'
-      - 'jndi:rmi://'
-      - 'jndi:ldap://'
   selection_spring4shell:
     c-uri|contains:
       - 'class.module.classLoader'
       - 'class.classLoader'
-  selection_shellshock:
-    cs-user-agent|contains:
-      - '() { '
-      - 'shellshock'
   selection_apache_struts:
     c-uri|contains:
-      - '%{#context'
       - 'action%3A'
       - 'redirect:http'
   selection_php_rce:
@@ -35,9 +28,12 @@ detection:
       - 'php://input'
       - 'php://filter'
       - 'passthru('
-      - 'system('
       - 'shell_exec('
-  condition: selection_log4shell or selection_spring4shell or selection_shellshock or selection_apache_struts or selection_php_rce
+  selection_shellshock:
+    cs-user-agent|contains:
+      - 'shellshock'
+      - 'bash -i'
+  condition: selection_log4shell or selection_spring4shell or selection_apache_struts or selection_php_rce or selection_shellshock
 
 falsepositives:
   - Security scanners in authorized test environments
@@ -47,7 +43,6 @@ level: critical
 tags:
   - attack.initial_access
   - attack.t1190
-  - attack.t1203
   - owasp.a06_2021
   - owasp.a08_2021
 
