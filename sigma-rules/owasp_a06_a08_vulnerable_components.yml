@@ -1,7 +1,7 @@
 title: OWASP A06/A08 - Vulnerable Components Exploitation Attempt
 id: a1b2c3d4-0008-4000-8000-000000000008
 status: stable
-description: Detects exploitation attempts targeting known vulnerabilities in common web frameworks and components including Log4Shell, Spring4Shell and PHP RCE payloads.
+description: Detects exploitation attempts targeting known vulnerabilities including Log4Shell, Spring4Shell and PHP RCE payloads.
 author: Security Team
 date: 2024/01/01
 modified: 2024/01/01
@@ -10,30 +10,19 @@ logsource:
   category: webserver
 
 detection:
-  selection_log4shell:
+  selection:
     c-uri|contains:
       - 'jndi:ldap'
       - 'jndi:rmi'
       - 'jndi:dns'
-  selection_spring4shell:
-    c-uri|contains:
       - 'class.module.classLoader'
       - 'class.classLoader'
-  selection_apache_struts:
-    c-uri|contains:
       - 'action%3A'
-      - 'redirect:http'
-  selection_php_rce:
-    c-uri|contains:
       - 'php://input'
       - 'php://filter'
       - 'passthru('
       - 'shell_exec('
-  selection_shellshock:
-    cs-user-agent|contains:
-      - 'shellshock'
-      - 'bash -i'
-  condition: selection_log4shell or selection_spring4shell or selection_apache_struts or selection_php_rce or selection_shellshock
+  condition: selection
 
 falsepositives:
   - Security scanners in authorized test environments
